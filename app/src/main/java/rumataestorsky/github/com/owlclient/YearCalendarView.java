@@ -10,6 +10,7 @@ import android.view.View;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 /**
@@ -58,7 +60,9 @@ public class YearCalendarView extends View {
     }
 
     private void init() {
-        endDate = DateTime.now().toLocalDate();
+        //DateTimeZone dtz = DateTimeZone.forTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
+        DateTimeZone dtz = DateTimeZone.forOffsetHours(3);//FIXME!!!
+        endDate = DateTime.now(dtz).toLocalDate();
         startDate = endDate.minusYears(1).withDayOfWeek(DateTimeConstants.MONDAY);
         daysCount = Days.daysBetween(startDate, endDate).getDays();
 
