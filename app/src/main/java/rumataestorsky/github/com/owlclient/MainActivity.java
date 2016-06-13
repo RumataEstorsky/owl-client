@@ -5,16 +5,15 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
+
 import java.io.IOException;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 import rumataestorsky.github.com.owlclient.api.OwlApi;
 import rumataestorsky.github.com.owlclient.api.OwlApi.Task;
-import rumataestorsky.github.com.owlclient.api.OwlApi.DaysProductivityView;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MAIN_ACTIVITY";
@@ -32,16 +31,6 @@ public class MainActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
     }
 
-    private void fillDays() throws IOException {
-        final ListView listView = (ListView) findViewById(R.id.listView);
-        Call<List<DaysProductivityView>> call = OwlApi.getApi().getDaysStatistics();
-        List<DaysProductivityView> days = call.execute().body();
-
-        ArrayAdapter<DaysProductivityView> adapter = new ArrayAdapter<DaysProductivityView>(this, android.R.layout.simple_list_item_1, days.toArray(new DaysProductivityView[0]));
-        listView.setAdapter(adapter);
-    }
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         try {
             fillSpinner();
-            fillDays();
         } catch (IOException e) {
             e.printStackTrace();
         }
