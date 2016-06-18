@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
         final String sCount = editText.getText().toString().trim();
         if (!sCount.isEmpty()) {
-            Task task = (Task) spinner.getSelectedItem();
+            TaskStatView task = (TaskStatView) spinner.getSelectedItem();
             int count = Integer.valueOf(sCount);
 
             Response<Task> added = OwlApi.getApi().addExec(task.id, count).execute();

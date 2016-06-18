@@ -51,7 +51,7 @@ public class OwlApi {
         Call<List<TaskStatView>> activeTaskStatView();
 
         @PUT("/task/{taskId}/exec/{count}")
-        Call<Task> addExec(@Path("taskId") int taskId, @Path("count") Integer count);
+        Call<Task> addExec(@Path("taskId") long taskId, @Path("count") Integer count);
 
         @GET("/statistics/days")
         Call<List<DaysProductivityView>> getDaysStatistics();
