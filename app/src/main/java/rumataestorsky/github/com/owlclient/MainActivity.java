@@ -3,10 +3,13 @@ package rumataestorsky.github.com.owlclient;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import org.joda.time.LocalDate;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,15 +17,17 @@ import retrofit2.Call;
 import retrofit2.Response;
 import rumataestorsky.github.com.owlclient.api.*;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     public static final String TAG = "MAIN_ACTIVITY";
 
+    private Spinner spinner;
+    private EditText editText;
+    private YearCalendarView yearCalendarView;
 
     public MainActivity() {
     }
 
     private void fillSpinner() throws IOException {
-        final Spinner spinner = (Spinner) findViewById(R.id.taskSpinner);
 //        Call<List<Task>> call = OwlApi.getApi().taskList();
         Call<List<TaskStatView>> call = OwlApi.getApi().activeTaskStatView();
         List<TaskStatView> tasks = call.execute().body();
@@ -35,6 +40,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        spinner = (Spinner) findViewById(R.id.taskSpinner);
+        spinner.setOnItemSelectedListener(this);
+        editText = (EditText) findViewById(R.id.countText);
+        yearCalendarView = (YearCalendarView) findViewById(R.id.yearCalendarView);
+
     }
 
     @Override
@@ -49,10 +60,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickSendExecButton(View v) throws IOException {
-
-        final EditText editText = (EditText) findViewById(R.id.countText);
-        final Spinner spinner = (Spinner) findViewById(R.id.taskSpinner);
-
         final String sCount = editText.getText().toString().trim();
         if (!sCount.isEmpty()) {
             TaskStatView task = (TaskStatView) spinner.getSelectedItem();
@@ -68,5 +75,42 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        try {
+            fillCalendar();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+    private void fillCalendar() throws IOException {
+        Call<List<OwlApi.DaysProductivityView>> call = OwlApi.getApi().getDaysStatistics();
+        List<OwlApi.DaysProductivityView> days = call.execute().body();
+
+        double avg = getAverage(days);
+        yearCalendarView.initColorWeights(avg);
+
+        for(OwlApi.DaysProductivityView day : days) {
+            yearCalendarView.addMark(LocalDate.parse(day.day), (int) Math.round(day.totalScore));//FIXME (double)
+        }
+    }
+
+
+
+    private double getAverage(List<OwlApi.DaysProductivityView> days) {
+        double sum = 0d;
+        for(OwlApi.DaysProductivityView day : days) {
+            sum += day.totalScore;
+        }
+        return days.isEmpty() ? 0d : sum / days.size();
+    }
+
 }
 

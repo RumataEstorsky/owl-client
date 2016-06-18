@@ -38,4 +38,10 @@
         android:layout_alignParentEnd="true"
         android:onClick="onClickSendExecButton" />
 
+    <rumataestorsky.github.com.owlclient.YearCalendarView
+        android:id="@+id/yearCalendarView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/countText" />
+
 </RelativeLayout>

@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.View;
 
@@ -18,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.TimeZone;
 import java.util.TreeMap;
 
 /**
@@ -54,9 +54,17 @@ public class YearCalendarView extends View {
 
     public YearCalendarView(Context context) {
         super(context);
-
         init();
-        graphInit();
+    }
+
+    public YearCalendarView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public YearCalendarView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
     }
 
     private void init() {
@@ -66,6 +74,7 @@ public class YearCalendarView extends View {
         startDate = endDate.minusYears(1).withDayOfWeek(DateTimeConstants.MONDAY);
         daysCount = Days.daysBetween(startDate, endDate).getDays();
 
+        graphInit();
     }
 
     public void initColorWeights(double average) {
