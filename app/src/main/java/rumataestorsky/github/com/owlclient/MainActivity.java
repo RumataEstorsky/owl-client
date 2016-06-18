@@ -78,8 +78,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        TaskStatView task = (TaskStatView) spinner.getSelectedItem();
+
         try {
-            fillCalendar();
+            fillCalendar(task.id);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,16 +92,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-    private void fillCalendar() throws IOException {
-        Call<List<OwlApi.DaysProductivityView>> call = OwlApi.getApi().getDaysStatistics();
+    private void fillCalendar(Long taskId) throws IOException {
+        Call<List<OwlApi.DaysProductivityView>> call;
+
+        call = (taskId == null) ? OwlApi.getApi().getAnnualStatistics()
+                                : OwlApi.getApi().getAnnualStatisticsByTask(taskId);
+
         List<OwlApi.DaysProductivityView> days = call.execute().body();
 
         double avg = getAverage(days);
-        yearCalendarView.initColorWeights(avg);
+        yearCalendarView.refresh(avg);
 
         for(OwlApi.DaysProductivityView day : days) {
             yearCalendarView.addMark(LocalDate.parse(day.day), (int) Math.round(day.totalScore));//FIXME (double)
         }
+
+        yearCalendarView.invalidate();
+
     }
 
 

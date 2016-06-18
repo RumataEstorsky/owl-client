@@ -54,8 +54,10 @@ public class OwlApi {
         Call<Task> addExec(@Path("taskId") long taskId, @Path("count") Integer count);
 
         @GET("/statistics/days")
-        Call<List<DaysProductivityView>> getDaysStatistics();
+        Call<List<DaysProductivityView>> getAnnualStatistics();
 
+        @GET("/task/{taskId}/days")
+        Call<List<DaysProductivityView>> getAnnualStatisticsByTask(@Path("taskId") long taskId);
     }
 
 

@@ -54,35 +54,46 @@ public class YearCalendarView extends View {
 
     public YearCalendarView(Context context) {
         super(context);
-        init();
+        initOnCreation();
     }
 
     public YearCalendarView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        initOnCreation();
     }
 
     public YearCalendarView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        initOnCreation();
     }
 
-    private void init() {
+    private void initOnCreation() {
+        graphInit();
+        initDates();
+    }
+
+    private void initColorWeights(double average) {
+        colorWeights.clear();
+        colorWeights.put(0d, 0);
+        colorWeights.put(average * 0.66, 1);
+        colorWeights.put(average * 1.32, 2);
+        colorWeights.put(average * 2, 3);
+    }
+
+    private void initDates() {
         //DateTimeZone dtz = DateTimeZone.forTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
         DateTimeZone dtz = DateTimeZone.forOffsetHours(3);//FIXME!!!
         endDate = DateTime.now(dtz).toLocalDate();
         startDate = endDate.minusYears(1).withDayOfWeek(DateTimeConstants.MONDAY);
         daysCount = Days.daysBetween(startDate, endDate).getDays();
 
-        graphInit();
     }
 
-    public void initColorWeights(double average) {
-        colorWeights.clear();
-        colorWeights.put(0d, 0);
-        colorWeights.put(average * 0.66, 1);
-        colorWeights.put(average * 1.32, 2);
-        colorWeights.put(average * 2, 3);
+    public void refresh(double average) {
+
+        initColorWeights(average);
+        marks.clear();
+
     }
 
     private void graphInit() {
@@ -147,7 +158,7 @@ public class YearCalendarView extends View {
     }
 
 
-    public void drawCalendar(Canvas canvas) {
+    private void drawCalendar(Canvas canvas) {
         for(int i = 0; i <= daysCount; i++) {
             LocalDate day = startDate.plusDays(i);
 
