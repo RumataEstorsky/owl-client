@@ -12,8 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
-import rumataestorsky.github.com.owlclient.api.OwlApi;
-import rumataestorsky.github.com.owlclient.api.OwlApi.Task;
+import rumataestorsky.github.com.owlclient.api.*;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MAIN_ACTIVITY";
@@ -24,10 +23,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void fillSpinner() throws IOException {
         final Spinner spinner = (Spinner) findViewById(R.id.taskSpinner);
-        Call<List<Task>> call = OwlApi.getApi().taskList();
-        List<Task> tasks = call.execute().body();
+//        Call<List<Task>> call = OwlApi.getApi().taskList();
+        Call<List<TaskStatView>> call = OwlApi.getApi().activeTaskStatView();
+        List<TaskStatView> tasks = call.execute().body();
 
-        ArrayAdapter<Task> adapter = new ArrayAdapter<Task>(this, android.R.layout.simple_spinner_item, tasks.toArray(new Task[0]));
+        ArrayAdapter<TaskStatView> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, tasks.toArray(new TaskStatView[0]));
         spinner.setAdapter(adapter);
     }
 
