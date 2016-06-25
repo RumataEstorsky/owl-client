@@ -19,6 +19,7 @@ import rumataestorsky.github.com.owlclient.api.*;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     public static final String TAG = "MAIN_ACTIVITY";
+    final int TOTAL_CALENDAR_ID = -1;
 
     private Spinner spinner;
     private EditText editText;
@@ -32,7 +33,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Call<List<TaskStatView>> call = OwlApi.getApi().activeTaskStatView();
         List<TaskStatView> tasks = call.execute().body();
 
-        ArrayAdapter<TaskStatView> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, tasks.toArray(new TaskStatView[0]));
+        ArrayAdapter<TaskStatView> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
+        TaskStatView marker = new TaskStatView(TOTAL_CALENDAR_ID, "Total Calendar (read only)", 0d, 0, 0, 0, 365);
+        adapter.add(marker);
+        adapter.addAll(tasks);
         spinner.setAdapter(adapter);
     }
 
@@ -92,19 +96,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-    private void fillCalendar(Long taskId) throws IOException {
+    private void fillCalendar(long taskId) throws IOException {
         Call<List<OwlApi.DaysProductivityView>> call;
 
-        call = (taskId == null) ? OwlApi.getApi().getAnnualStatistics()
-                                : OwlApi.getApi().getAnnualStatisticsByTask(taskId);
+        call = (taskId == TOTAL_CALENDAR_ID) ? OwlApi.getApi().getAnnualStatistics()
+                                             : OwlApi.getApi().getAnnualStatisticsByTask(taskId);
 
         List<OwlApi.DaysProductivityView> days = call.execute().body();
 
-        double avg = getAverage(days);
+        double avg = getAverage(days, taskId == TOTAL_CALENDAR_ID);
         yearCalendarView.refresh(avg);
 
         for(OwlApi.DaysProductivityView day : days) {
-            yearCalendarView.addMark(LocalDate.parse(day.day), (int) Math.round(day.totalScore));//FIXME (double)
+            yearCalendarView.addMark(
+                    LocalDate.parse(day.day),
+                    taskId == TOTAL_CALENDAR_ID ? ((int) Math.round(day.totalScore)) : day.execCount //FIXME (double)
+            );
         }
 
         yearCalendarView.invalidate();
@@ -113,10 +120,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
 
-    private double getAverage(List<OwlApi.DaysProductivityView> days) {
+    private double getAverage(List<OwlApi.DaysProductivityView> days, boolean scoreOrExecs) {
         double sum = 0d;
         for(OwlApi.DaysProductivityView day : days) {
-            sum += day.totalScore;
+            sum += scoreOrExecs ? day.totalScore : day.execCount;
         }
         return days.isEmpty() ? 0d : sum / days.size();
     }
