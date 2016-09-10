@@ -12,9 +12,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
-import org.joda.time.DateTimeZone;
+
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import java.util.ArrayList;
@@ -31,8 +29,6 @@ import java.util.TreeMap;
 public class YearCalendarView extends View implements View.OnTouchListener {
     private static final String TAG = "YearCalendarView";
     private static final String DF = "yyyy-MM-dd";
-    private static final int WEEKS = 53;
-    private static final int DAYS  = 7;
 
 
     private int cellSize;
@@ -40,18 +36,16 @@ public class YearCalendarView extends View implements View.OnTouchListener {
     private int daysLabelWidth;
     private Paint borderPaint = new Paint();
     private Paint textPaint = new Paint();
+    private Paint bestResultPaint = new Paint();
 
 
-    private LocalDate endDate;
-    private LocalDate startDate;
-    private int daysCount;
-    private NavigableMap<Double, Integer> colorWeights = new TreeMap<>();
+    private YearCalendar calendar;
 
 
     private int colors[] = {Color.LTGRAY, 0xffd6e685, 0xff8cc665, 0xff44a340, 0xff1e6823};
     private List<Paint> paints = new ArrayList<>(colors.length);
 
-    /** Marks key: number of day since first day of calendar value (color + score)*/
+    /** Marks key: number of day since first day of calendar value (color + totalScore)*/
     private Map<Integer, Pair<Integer, Integer>> marks = new HashMap<>();
 
     private boolean showScores = false;
@@ -61,57 +55,27 @@ public class YearCalendarView extends View implements View.OnTouchListener {
 
     public YearCalendarView(Context context) {
         super(context);
-        initOnCreation();
+        graphInit();
     }
 
     public YearCalendarView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initOnCreation();
+        graphInit();
     }
 
     public YearCalendarView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initOnCreation();
-    }
-
-    private void initOnCreation() {
         graphInit();
-        initDates();
     }
 
-    private void initColorWeights(double average) {
-        colorWeights.clear();
-        colorWeights.put(0d, 0);
-        colorWeights.put(average * 0.66, 1);
-        colorWeights.put(average * 1.32, 2);
-        colorWeights.put(average * 2, 3);
-    }
-
-    private void initDates() {
-        //DateTimeZone dtz = DateTimeZone.forTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
-        DateTimeZone dtz = DateTimeZone.forOffsetHours(3);//FIXME!!!
-        endDate = DateTime.now(dtz).toLocalDate();
-        startDate = endDate.minusYears(1).withDayOfWeek(DateTimeConstants.MONDAY);
-        daysCount = Days.daysBetween(startDate, endDate).getDays();
-
-    }
-
-    public void refresh(double average) {
-
-        initColorWeights(average);
-        marks.clear();
-
-    }
 
     private void graphInit() {
         setOnTouchListener(this);
 
         borderPaint.setColor(Color.WHITE);
         borderPaint.setStyle(Paint.Style.STROKE);
-
-        textPaint = new Paint();
         textPaint.setColor(Color.BLACK);
-
+        bestResultPaint.setColor(Color.RED);
 
         for(int color: colors) {
             Paint p = new Paint();
@@ -126,7 +90,11 @@ public class YearCalendarView extends View implements View.OnTouchListener {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        cellSize = getWidth() / WEEKS - 1;
+        if(calendar == null) {
+            return;
+        }
+
+        cellSize = getWidth() / YearCalendar.WEEKS - 1;
         monthsLabelHeight = cellSize;
         daysLabelWidth = cellSize;
         canvas.drawColor(Color.WHITE);
@@ -136,31 +104,27 @@ public class YearCalendarView extends View implements View.OnTouchListener {
 
 
 
-    public void addMark(int year, int month, int day, int color, int score) {
-        LocalDate date = new LocalDate(year, month, day);
-        addMark(date, color, score);
-    }
+//    public void addMark(int year, int month, int day, int color, int score) {
+//        LocalDate date = new LocalDate(year, month, day);
+//        addMark(date, color, score);
+//    }
 
-    public void addMark(LocalDate day, int score) {
-        int color = pickColor(score);
-        addMark(day, color, score);
-    }
+//    public void addMark(LocalDate day, int score) {
+//        int color = pickColor(score);
+//        addMark(day, color, score);
+//    }
 
-    private int pickColor(double score) {
-        Map.Entry<Double, Integer> entry = colorWeights.ceilingEntry(score);
-        return (entry == null) ? 4 : entry.getValue().intValue();
-    }
 
-    public void addMark(LocalDate day, int color, int score) {
-        if(day.isBefore(startDate) || day.isAfter(endDate)) {
-            throw new IllegalArgumentException("Date " + day.toString(DF) + " is impossible in period of this calendar!" );
-        }
-        int dc = daysSinceStart(day);
-        marks.put(dc, new Pair<>(color, score));
-    }
+//    public void addMark(LocalDate day, int color, int score) {
+//        if(day.isBefore(calendar.getStartDate()) || day.isAfter(calendar.getEndDate())) {
+//            throw new IllegalArgumentException("Date " + day.toString(DF) + " is impossible in period of this calendar!" );
+//        }
+//        int dc = calendar.daysSinceStart(day);
+//        marks.put(dc, new Pair<>(color, score));
+//    }
 
     public void drawDaySquare(Canvas canvas, Paint paint, LocalDate day, int score) {
-        int w = getWeekNumber(day);
+        int w = calendar.getWeekNumber(day);
         int d = day.getDayOfWeek() - 1;
 
         Rect r = new Rect(
@@ -171,7 +135,6 @@ public class YearCalendarView extends View implements View.OnTouchListener {
         );
         canvas.drawRect(r, paint);
         String text = score == 0 ? "" : String.valueOf(score);
-        Log.i(TAG, textPaint.getTextSize() + "!" + cellSize);
         textPaint.setTextSize((float) (cellSize / 2));
         canvas.drawText(text, r.left, r.centerY(), textPaint);
         canvas.drawRect(r, borderPaint);
@@ -181,16 +144,16 @@ public class YearCalendarView extends View implements View.OnTouchListener {
         final int MONTHS = 12;
         int cell = getWidth() / MONTHS;
         for(int i = 0; i < MONTHS; ++i) {
-            String name = startDate.plusMonths(i).monthOfYear().getAsText(new Locale("ru"));
+            String name = calendar.getStartDate().plusMonths(i).monthOfYear().getAsText(new Locale("ru"));
             canvas.drawText(name, cell * i, monthsLabelHeight / 2, textPaint);
         }
     }
 
     private void drawLabelsOfWeekdays(Canvas canvas) {
-        for(int i = 0; i < DAYS; ++i) {
-            String name = startDate.plusDays(i).toString("E");
+        for(int i = 0; i < YearCalendar.DAYS; ++i) {
+            String name = calendar.getStartDate().plusDays(i).toString("E");
             int y = monthsLabelHeight + (i * cellSize) + (cellSize / 2);
-            int rightColumnX = 3 + (cellSize * (WEEKS + 1)) + 3;
+            int rightColumnX = 3 + (cellSize * (YearCalendar.WEEKS + 1)) + 3;
 
             canvas.drawText(name, 3, y, textPaint);
             canvas.drawText(name, rightColumnX, y, textPaint);
@@ -202,26 +165,19 @@ public class YearCalendarView extends View implements View.OnTouchListener {
         drawLabelsOfMonths(canvas);
         drawLabelsOfWeekdays(canvas);
 
-        for(int i = 0; i <= daysCount; i++) {
-            LocalDate day = startDate.plusDays(i);
-
-            int paintIndex = marks.containsKey(i) ? marks.get(i).first : 0;
-            Paint paint = paints.get(paintIndex);
-
+        for(int i = 0; i <= calendar.getDaysCount(); i++) {
+            LocalDate day = calendar.getStartDate().plusDays(i);
             int score = marks.containsKey(i) ? marks.get(i).second : 0;
+
+//            int paintIndex = marks.containsKey(i) ? marks.get(i).first : 0;
+            int paintIndex = calendar.getStepOfProductivity(score);
+            Paint paint = paints.get(paintIndex);
 
             drawDaySquare(canvas, paint, day, score);
         }
+        LocalDate first = calendar.getStartDate().plusDays(0);
+        drawDaySquare(canvas, bestResultPaint, first, 111);
     }
-
-    public int daysSinceStart(LocalDate day) {
-        return Days.daysBetween(startDate, day).getDays();
-    }
-
-    public int getWeekNumber(LocalDate day) {
-        return daysSinceStart(day) / DAYS;
-    }
-
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -233,15 +189,17 @@ public class YearCalendarView extends View implements View.OnTouchListener {
 
     private String getDayByCoords(float x, float y) {
         int week = (int) Math.floor(x / cellSize);
-        week = week >= WEEKS ? (WEEKS - 1) : week;
+        week = week >= YearCalendar.WEEKS ? (YearCalendar.WEEKS - 1) : week;
         int day = (int) Math.floor(y / cellSize);
-        day = day >= DAYS ? (DAYS - 1) : day;
-        int dayNumber = (week) * DAYS + day - 1;
-        LocalDate date = startDate.plusDays(dayNumber);
-
-        //Log.i(TAG, "week=" + week + ";day=" + day + ";dayNumber=" + dayNumber + ";date=" + date.toString(DF));
+        day = day >= YearCalendar.DAYS ? (YearCalendar.DAYS - 1) : day;
+        int dayNumber = (week) * YearCalendar.DAYS + day - 1;
+        LocalDate date = calendar.getStartDate().plusDays(dayNumber);
 
         double score = marks.containsKey(dayNumber) ? marks.get(dayNumber).second : 0;
         return date.toString(DF) + ": " + Math.ceil(score);
+    }
+
+    public void setCalendar(YearCalendar calendar) {
+        this.calendar = calendar;
     }
 }

@@ -1,9 +1,7 @@
 package rumataestorsky.github.com.owlclient.api;
 
 import android.os.StrictMode;
-
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -17,31 +15,6 @@ import retrofit2.http.Path;
 public class OwlApi {
     public static final String API_URL = "http://owl.lastochka-os.ru";
     private static OwlInterface owl;
-
-
-
-
-
-
-    public static class DaysProductivityView {
-        public final String day;
-        public final double totalScore;
-        public final int execCount;
-        public final int typesTasksCount;
-
-        public DaysProductivityView(String day, double totalScore, int execCount, int typesTasksCount) {
-            this.day = day;
-            this.totalScore = totalScore;
-            this.execCount = execCount;
-            this.typesTasksCount = typesTasksCount;
-        }
-
-        @Override
-        public String toString() {
-            return day + " = " + totalScore + ";";
-        }
-    }
-
 
     public interface OwlInterface {
         @GET("/task")
