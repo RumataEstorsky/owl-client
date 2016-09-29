@@ -171,7 +171,6 @@ public class YearCalendarView extends View implements View.OnTouchListener {
         );
         canvas.drawRect(r, paint);
         String text = score == 0 ? "" : String.valueOf(score);
-        Log.i(TAG, textPaint.getTextSize() + "!" + cellSize);
         textPaint.setTextSize((float) (cellSize / 2));
         canvas.drawText(text, r.left, r.centerY(), textPaint);
         canvas.drawRect(r, borderPaint);

@@ -1,13 +1,17 @@
 package rumataestorsky.github.com.owlclient;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import net.danlew.android.joda.JodaTimeAndroid;
 
 import org.joda.time.LocalDate;
 
@@ -16,6 +20,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 import rumataestorsky.github.com.owlclient.api.*;
+import rumataestorsky.github.com.owlclient.services.RegistrationIntentService;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     public static final String TAG = "MAIN_ACTIVITY";
@@ -43,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        JodaTimeAndroid.init(this);
+
         setContentView(R.layout.activity_main);
 
         spinner = (Spinner) findViewById(R.id.taskSpinner);
@@ -50,7 +57,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         editText = (EditText) findViewById(R.id.countText);
         yearCalendarView = (YearCalendarView) findViewById(R.id.yearCalendarView);
 
+
+        Intent intent = new Intent(this, RegistrationIntentService.class);
+        startService(intent);
     }
+
 
     @Override
     protected void onStart() {
