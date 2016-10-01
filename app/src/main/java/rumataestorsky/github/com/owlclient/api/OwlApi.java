@@ -58,6 +58,9 @@ public class OwlApi {
 
         @GET("/task/{taskId}/days")
         Call<List<DaysProductivityView>> getAnnualStatisticsByTask(@Path("taskId") long taskId);
+
+        @GET("/token/add-token/{token}")
+        void addToken(@Path("token") String token);
     }
 
 
